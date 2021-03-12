@@ -140,3 +140,17 @@ def delete_users(user_ids):
     except:
         traceback.print_exc()
         return False
+
+
+def insert_task(user_id, title, text):
+    try:
+        with get_db() as conn:
+            cur = conn.cursor()
+            sql = "INSERT into task(title, text, user_id) values (%s,%s,%s)"
+            cur.execute(sql, (title, text, user_id))
+            conn.commit()
+
+        return True
+    except:
+        traceback.print_exc()
+        return False
