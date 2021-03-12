@@ -1,5 +1,5 @@
 # https://docs.gunicorn.org/en/stable/settings.html
-bind = '0.0.0.0:16980'
+bind = '0.0.0.0:8000'
 worker_class = 'sync' # default = sync
 workers = 2 # default = 1
 loglevel = 'debug'
