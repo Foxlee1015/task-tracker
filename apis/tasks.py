@@ -1,61 +1,64 @@
 from flask_restplus import Namespace, Resource, fields, reqparse
 
 from core import db
+from core.resource import CustomResource, response, json_serial
 
 api = Namespace('tasks', description='Tasks related operations')
 
-tasks = [
-    {
-        "id": 1,
-        "name": 'water'
-    },
-    {
-        "id": 2,
-        "name": 'coke'
-    }
-]
 
 # https://flask-restplus.readthedocs.io/en/stable/parsing.html
 parser_create = reqparse.RequestParser()
 parser_create.add_argument('title', type=str, required=True, location='form', help='Title')
 parser_create.add_argument('text', type=str, required=True, location='form')
+parser_create.add_argument('repeat_type', type=int, required=True, location='form')
 
 parser_delete = reqparse.RequestParser()
 parser_delete.add_argument('ids', type=str, required=True, action='split')
 
 @api.route('/')
-class Tasks(Resource):
+class Tasks(CustomResource):
     @api.doc('get all tasks')
     def get(self):
-        return tasks
+        tasks = db.get_tasks()
+        for task in tasks:
+            task['datetime'] = json_serial(task['datetime'])
+        
+        res = response(status=1, result={"tasks":tasks})
+        return self.send(res)
     
     @api.doc('create a new task')
     @api.expect(parser_create)
     def post(self):
         args = parser_create.parse_args()
         title = args["title"]
-        text = args["text"]
-        db.insert_task(1, title, text)
-        return tasks
+        text = args["text"]        
+        repeat_type = args["repeat_type"]
+        row_id = db.insert_task_group(1, title, text, repeat_type)
+        db.insert_task(row_id)
+        
+        res = response(status=1)
+        return self.send(res)
 
     @api.doc('delete tasks')
     @api.expect(parser_delete)
     def delete(self):
         args = parser_delete.parse_args()
         print(args)
-        return tasks
+        res = response(status=1)
+        return self.send(res)
 
 
 @api.route('/<id>')
 @api.param('id', 'The task identifier')
 @api.response(404, 'Task not found')
-class Task(Resource):
+class Task(CustomResource):
     @api.doc('get_tasks')
     def get(self, id):
         '''Fetch an task given its identifier'''
         for task in tasks:
             if task['id'] == id:
-                return task
+                res = response(status=1, result={'task': task})
+                return self.send(res)
         api.abort(404)
     
     @api.doc('delete a task')

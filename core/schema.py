@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS `user` (
     PRIMARY KEY(`id`)
 );
 
-CREATE TABLE IF NOT EXISTS `task` (
+CREATE TABLE IF NOT EXISTS `task_group` (
     `id`                    INT(11) NOT NULL AUTO_INCREMENT,
     `title`                 VARCHAR(50),
     `text`                  VARCHAR(200),
@@ -20,6 +20,30 @@ CREATE TABLE IF NOT EXISTS `task` (
     `update_datetime`       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY(`id`),
     CONSTRAINT FOREIGN KEY (`user_id`) REFERENCES `task_tracker`.`user` (`id`) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS `task` (
+    `id`                    INT(11) NOT NULL AUTO_INCREMENT,
+    `group_id`              INT(11),
+    `checked`               INT(3) DEFAULT 0,
+    `datetime`              TIMESTAMP NOT NULL,
+    PRIMARY KEY(`id`),
+    CONSTRAINT FOREIGN KEY (`group_id`) REFERENCES `task_tracker`.`task_group` (`id`) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS `link` (
+    `id`                    INT(11) NOT NULL AUTO_INCREMENT,
+    `desc`                  VARCHAR(100),
+    `link`                  VARCHAR(300),
+    PRIMARY KEY(`id`)
+);
+
+CREATE TABLE IF NOT EXISTS `task_group_link` (
+    `id`                    INT(11) NOT NULL AUTO_INCREMENT,
+    `group_id`              INT(11),
+    `link_id`               INT(11),
+    PRIMARY KEY(`id`, `group_id`, `link_id`),
+    CONSTRAINT FOREIGN KEY (`group_id`) REFERENCES `task_tracker`.`task_group` (`id`) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS `session` (

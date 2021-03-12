@@ -142,15 +142,54 @@ def delete_users(user_ids):
         return False
 
 
-def insert_task(user_id, title, text):
+def insert_task_group(user_id, title, text, repeat_type):
     try:
         with get_db() as conn:
             cur = conn.cursor()
-            sql = "INSERT into task(title, text, user_id) values (%s,%s,%s)"
-            cur.execute(sql, (title, text, user_id))
+            sql = "INSERT into task_group(title, text, user_id, repeat_type) values (%s,%s,%s, %s)"
+            cur.execute(sql, (title, text, user_id, repeat_type))
+            conn.commit()
+            return cur.lastrowid
+    except:
+        traceback.print_exc()
+        return False
+
+
+from datetime import datetime
+
+def insert_task(group_id, datetime_=None):
+    # SET SQL_MODE='ALLOW_INVALID_DATES';
+    if datetime_ is None:
+        datetime_ = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        print(datetime_)
+    try:
+        with get_db() as conn:
+            cur = conn.cursor()
+            sql = "INSERT into task(group_id, datetime) values (%s,%s)"
+            cur.execute(sql, (group_id, datetime_))
             conn.commit()
 
         return True
+    except:
+        traceback.print_exc()
+        return False
+
+
+def get_tasks():
+    try:
+        with get_db() as conn:
+
+            cur = conn.cursor()
+            sql = """
+                SELECT
+                    *
+                FROM task
+            """
+            cur.execute(sql)
+            conn.commit()
+            res = cur.fetchall()
+
+        return res
     except:
         traceback.print_exc()
         return False
