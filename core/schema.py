@@ -41,10 +41,11 @@ CREATE TABLE IF NOT EXISTS `link` (
 
 CREATE TABLE IF NOT EXISTS `task_group_link` (
     `id`                    INT(11) NOT NULL AUTO_INCREMENT,
-    `group_id`              INT(11),
+    `task_group_id`         INT(11),
     `link_id`               INT(11),
-    PRIMARY KEY(`id`, `group_id`, `link_id`),
-    CONSTRAINT FOREIGN KEY (`group_id`) REFERENCES `task_tracker`.`task_group` (`id`) ON UPDATE CASCADE ON DELETE CASCADE
+    PRIMARY KEY(`id`, `task_group_id`, `link_id`),
+    CONSTRAINT FOREIGN KEY (`task_group_id`) REFERENCES `task_tracker`.`task_group` (`id`) ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT FOREIGN KEY (`link_id`) REFERENCES `task_tracker`.`link` (`id`) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS `session` (

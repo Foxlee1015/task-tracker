@@ -15,7 +15,10 @@ def create_task(user_id, title, text, repeat_type, link_ids):
         db.insert_task(row_id) # need to add task time
         
         if link_ids is not None:
-            print(link_ids)
+            task_group_id_with_link_list = []
+            for link_id in link_ids:
+                task_group_id_with_link_list.append((row_id, link_id))
+            db.insert_task_group_link(task_group_id_with_link_list)
 
         return True
     except:

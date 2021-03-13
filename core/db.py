@@ -250,6 +250,22 @@ def delete_links(ids):
     except:
         traceback.print_exc()
 
+
+def insert_task_group_link(task_group_id_with_link_list):
+
+    try:
+        with get_db() as conn:
+            cur = conn.cursor()
+            sql = "INSERT into task_group_link(task_group_id, link_id) values (%s,%s)"
+            cur.executemany(sql, task_group_id_with_link_list)
+            conn.commit()
+
+        return True
+    except:
+        traceback.print_exc()
+        return False
+
+
 def add_condition_to_query(sql, col, row):
     sql += f" WHERE {col}={row}"
     return sql
