@@ -14,8 +14,10 @@ CREATE TABLE IF NOT EXISTS `task_group` (
     `id`                    INT(11) NOT NULL AUTO_INCREMENT,
     `title`                 VARCHAR(50),
     `text`                  VARCHAR(200),
-    `repeat_type`           INT(3) DEFAULT 2,
+    `repeat_type`           INT(3) DEFAULT 0,
     `user_id`               INT(11) NOT NULL,
+    `selected_date`         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `end_date`              TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `create_datetime`       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `update_datetime`       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY(`id`),
@@ -36,7 +38,9 @@ CREATE TABLE IF NOT EXISTS `link` (
     `url`                   VARCHAR(300),
     `description`           VARCHAR(200),
     `image_url`             VARCHAR(300),
-    PRIMARY KEY(`id`)
+    `user_id`               INT(11) NOT NULL,
+    PRIMARY KEY(`id`),
+    CONSTRAINT FOREIGN KEY (`user_id`) REFERENCES `task_tracker`.`user` (`id`) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS `task_group_link` (

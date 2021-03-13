@@ -65,6 +65,9 @@ def init_db():
                 except:
                     traceback.print_exc()
         conn.commit()
+    
+    if not get_users(name='admin'):
+        insert_user('admin', '', 0)
 
 def backup_db():
     BACKUP_PATH = '/var/backups'
@@ -101,7 +104,7 @@ def insert_user(user_name, email, user_type):
         return False
 
 
-def get_users():
+def get_users(name=None):
     try:
         with get_db() as conn:
 
@@ -110,11 +113,12 @@ def get_users():
                 SELECT *
                 FROM user
             """
+            if name is not None:
+                sql = add_condition_to_query(sql, "name", name)
             cur.execute(sql)
             conn.commit()
             res = cur.fetchall()
-
-        return res
+            return res
     except:
         traceback.print_exc()
         return False
@@ -193,13 +197,13 @@ def get_tasks(id_=None):
         return False
 
 
-def insert_link(url,description, image_url):
+def insert_link(user_id, url,description, image_url):
     print(url, description, image_url)
     try:
         with get_db() as conn:
             cur = conn.cursor()
-            sql = "INSERT into link(url, description, image_url) values (%s,%s,%s)"
-            cur.execute(sql, (url, description, image_url))
+            sql = "INSERT into link(url, description, image_url, user_id) values (%s,%s,%s, %s)"
+            cur.execute(sql, (url, description, image_url, user_id))
             conn.commit()
 
         return True
@@ -267,5 +271,8 @@ def insert_task_group_link(task_group_id_with_link_list):
 
 
 def add_condition_to_query(sql, col, row):
-    sql += f" WHERE {col}={row}"
+    if isinstance(row, int):
+        sql += f" WHERE {col}={row}"
+    elif isinstance(row, str):
+        sql += f" WHERE {col}='{row}'"
     return sql

@@ -9,9 +9,9 @@ from core.resource import CustomResource, response, json_serial
 api = Namespace('links', description='Links related operations')
 
 
-def create_link(url, description, image_url):
+def create_link(user_id, url, description, image_url):
     try:
-        db.insert_link(url, description, image_url)
+        db.insert_link(user_id, url, description, image_url)
         return True
     except:
         traceback.print_exc()
@@ -53,7 +53,7 @@ class Links(CustomResource):
         description = args["description"]        
         image_url = args.get("image_url")
         
-        result = create_link(url, description, image_url)
+        result = create_link(1, url, description, image_url)
         status = 1 if result else 0
 
         res = response(status=status)
