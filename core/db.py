@@ -9,7 +9,7 @@ import pymysql
 from dotenv import load_dotenv
 
 from core import errors
-from core.utils import docker_command
+from core.utils import docker_command, stringify_given_datetime_or_current_datetime
 
 
 # load dotenv in the base root
@@ -154,14 +154,8 @@ def insert_task_group(user_id, title, text, repeat_type):
         traceback.print_exc()
         return False
 
-
-from datetime import datetime
-
 def insert_task(group_id, datetime_=None):
-    # SET SQL_MODE='ALLOW_INVALID_DATES';
-    if datetime_ is None:
-        datetime_ = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        print(datetime_)
+    datetime_ = stringify_given_datetime_or_current_datetime(datetime_)
     try:
         with get_db() as conn:
             cur = conn.cursor()
@@ -175,7 +169,7 @@ def insert_task(group_id, datetime_=None):
         return False
 
 
-def get_tasks():
+def get_tasks(id_=None):
     try:
         with get_db() as conn:
 
@@ -185,6 +179,10 @@ def get_tasks():
                     *
                 FROM task
             """
+            
+            if id_ is not None:
+                sql = add_condition_to_query(sql, "id", id_)
+
             cur.execute(sql)
             conn.commit()
             res = cur.fetchall()
@@ -193,3 +191,65 @@ def get_tasks():
     except:
         traceback.print_exc()
         return False
+
+
+def insert_link(url,description, image_url):
+    print(url, description, image_url)
+    try:
+        with get_db() as conn:
+            cur = conn.cursor()
+            sql = "INSERT into link(url, description, image_url) values (%s,%s,%s)"
+            cur.execute(sql, (url, description, image_url))
+            conn.commit()
+
+        return True
+    except:
+        traceback.print_exc()
+        return False
+
+
+def get_links(id_=None):
+    try:
+        with get_db() as conn:
+
+            cur = conn.cursor()
+            sql = """
+                SELECT
+                    *
+                FROM link
+            """
+            if id_ is None:
+                cur.execute(sql)
+                conn.commit()
+                res = cur.fetchall()
+                
+            else:
+                sql = add_condition_to_query(sql, "id", id_)
+                cur.execute(sql)
+                conn.commit()
+                res = cur.fetchone()
+
+        return res
+    except:
+        traceback.print_exc()
+
+
+def delete_links(ids):
+    """
+    :param ids: a list of link ids
+    """
+    try:
+        with get_db() as conn:
+            cur = conn.cursor()
+            sql = f"""
+                DELETE FROM link
+                WHERE id in ({','.join(str(id_) for id_ in ids)})
+            """
+            cur.execute(sql)
+            conn.commit()
+    except:
+        traceback.print_exc()
+
+def add_condition_to_query(sql, col, row):
+    sql += f" WHERE {col}={row}"
+    return sql

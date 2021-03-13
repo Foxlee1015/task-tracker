@@ -41,3 +41,15 @@ def docker_command(container_name, cmd):
     except Exception as e:
         traceback.print_exc()
         print(e)
+
+def stringify_given_datetime_or_current_datetime(datetime_=None, format_='%Y-%m-%d %H:%M:%S'):
+    '''
+    :param format_: '%Y-%m-%d %H:%M:%S' is for database
+    '''
+    try:
+        if datetime_ is None:
+            datetime_ = datetime.now()
+        return datetime_.strftime(format_)
+    except Exception as e:
+        traceback.print_exc()
+        print(e)

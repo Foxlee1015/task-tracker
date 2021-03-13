@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+import traceback
+
 from flask_restplus import Namespace, Resource, fields, reqparse
 
 from core import db
@@ -6,11 +9,26 @@ from core.resource import CustomResource, response, json_serial
 api = Namespace('tasks', description='Tasks related operations')
 
 
+def create_task(user_id, title, text, repeat_type, link_ids):
+    try:
+        row_id = db.insert_task_group(user_id, title, text, repeat_type)
+        db.insert_task(row_id) # need to add task time
+        
+        if link_ids is not None:
+            print(link_ids)
+
+        return True
+    except:
+        traceback.print_exc()
+        return False
+
+
 # https://flask-restplus.readthedocs.io/en/stable/parsing.html
 parser_create = reqparse.RequestParser()
 parser_create.add_argument('title', type=str, required=True, location='form', help='Title')
 parser_create.add_argument('text', type=str, required=True, location='form')
 parser_create.add_argument('repeat_type', type=int, required=True, location='form')
+parser_create.add_argument('link_ids', type=str, location='form', action='split')
 
 parser_delete = reqparse.RequestParser()
 parser_delete.add_argument('ids', type=str, required=True, action='split')
@@ -33,10 +51,12 @@ class Tasks(CustomResource):
         title = args["title"]
         text = args["text"]        
         repeat_type = args["repeat_type"]
-        row_id = db.insert_task_group(1, title, text, repeat_type)
-        db.insert_task(row_id)
+        link_ids = args.get("link_ids")
         
-        res = response(status=1)
+        result = create_task(1, title, text, repeat_type, link_ids)
+        status = 1 if result else 0
+
+        res = response(status=status)
         return self.send(res)
 
     @api.doc('delete tasks')

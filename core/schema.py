@@ -33,8 +33,9 @@ CREATE TABLE IF NOT EXISTS `task` (
 
 CREATE TABLE IF NOT EXISTS `link` (
     `id`                    INT(11) NOT NULL AUTO_INCREMENT,
-    `desc`                  VARCHAR(100),
-    `link`                  VARCHAR(300),
+    `url`                   VARCHAR(300),
+    `description`           VARCHAR(200),
+    `image_url`             VARCHAR(300),
     PRIMARY KEY(`id`)
 );
 
