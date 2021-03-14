@@ -1,7 +1,7 @@
 import time
 from flask import Flask
 
-from apis import api
+from apis import blueprint as api
 from core.db import init_db, backup_db
 from core.errors import DbConnectError
 
@@ -20,7 +20,10 @@ def background_task():
 
 def create_app():
     app = Flask(__name__)
-    api.init_app(app)
+    app.register_blueprint(api, url_prefix='/api')
+    # api.init_app(app) 
+    # https://flask-restplus.readthedocs.io/en/stable/scaling.html
+    # Calling Api.init_app() is not required here because registering the blueprint with the app takes care of setting up the routing for the application.
     init_settings()
 
     # background_task()
