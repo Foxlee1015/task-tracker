@@ -48,7 +48,7 @@ class TaskGoup(CustomResource):
         for task in tasks:
             task['datetime'] = json_serial(task['datetime'])
         
-        res = response(status=1, result={"tasks":tasks})
+        res = response(status=1, result=tasks)
         return self.send(res)
     
     @api.doc('create a new task')
