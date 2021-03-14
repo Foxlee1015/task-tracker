@@ -84,7 +84,7 @@ class Task(CustomResource):
         '''Fetch an task given its identifier'''
         for task in tasks:
             if task['id'] == id_:
-                res = response(status=1, result={'task': task})
+                res = response(status=1, result={task})
                 return self.send(res)
         api.abort(404)
     
@@ -107,7 +107,7 @@ class Tasks(CustomResource):
         for task in tasks:
             task['datetime'] = json_serial(task['datetime'])
         
-        res = response(status=1, result={"tasks":tasks})
+        res = response(status=1, result={tasks})
         return self.send(res)
     
     @api.doc('create a new task')
@@ -143,7 +143,7 @@ class Task(CustomResource):
         '''Fetch an task given its identifier'''
         for task in tasks:
             if task['id'] == id_:
-                res = response(status=1, result={'task': task})
+                res = response(status=1, result={task})
                 return self.send(res)
         api.abort(404)
     
