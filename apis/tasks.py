@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import datetime
 import traceback
 
 from flask_restplus import Namespace, Resource, fields, reqparse
@@ -11,19 +12,51 @@ api = Namespace('tasks', description='Tasks related operations')
 
 def create_task(user_id, title, text, repeat_type, link_ids):
     try:
-        row_id = db.insert_task_group(user_id, title, text, repeat_type)
-        db.insert_task(row_id) # need to add task time
+        task_group_id = db.insert_task_group(user_id, title, text, repeat_type)
+        task_dates = create_task_dates_by_repeat_type(repeat_type, start_date=None, end_date=None)
+        print(task_dates)
+        db.insert_task(task_group_id, task_dates)
         
         if link_ids is not None:
             task_group_id_with_link_list = []
             for link_id in link_ids:
-                task_group_id_with_link_list.append((row_id, link_id))
+                task_group_id_with_link_list.append((task_group_id, link_id))
             db.insert_task_group_link(task_group_id_with_link_list)
 
         return True
     except:
         traceback.print_exc()
         return False
+
+def create_task_dates_by_repeat_type(repeat_type, start_date=None, end_date=None):
+    """
+     
+    :param repeat_type: 0 - no repeat, 1 - weekly, 2 - monthly, 3 - yearly, 4 - Biweekly
+    """
+    if start_date is None:
+        start_date = datetime.datetime.now()
+
+    task_dates = [start_date]
+    if repeat_type == 0:
+        return task_dates
+
+    if end_date is None:
+        end_date = start_date + datetime.timedelta(days=180)
+
+    task_date = start_date
+    while task_date <= end_date:
+        if repeat_type == 1:
+            task_date = task_date + datetime.timedelta(days=7)
+        elif repeat_type == 2:
+            task_date = task_date + datetime.timedelta(days=30)
+        elif repeat_type == 3:
+            task_date = task_date + datetime.timedelta(days=365)
+        elif repeat_type == 4:
+            task_date = task_date + datetime.timedelta(days=14)
+
+        task_dates.append(task_date)
+    return task_dates
+        
 
 
 # https://flask-restplus.readthedocs.io/en/stable/parsing.html
@@ -83,7 +116,6 @@ class Task(CustomResource):
     def get(self, id_):
         '''Fetch a task group given its identifier'''
         task_group = db.get_task_groups(id_=id_)
-        print(task_group)
         task_group = json_serializer_all_datetime_keys(task_group)
         
         res = response(status=1, result=task_group)
@@ -92,10 +124,9 @@ class Task(CustomResource):
     @api.doc('delete a task')
     def delete(self, id_):
         '''Fetch a session given its identifier'''
-        if id == 1:
-            return id
-        else:
-            api.abort(404)
+        db.delete_tasks(ids=[id_])
+        res = response(status=1)
+        return self.send(res)
 
 
 @api.route('/')
@@ -130,7 +161,7 @@ class Tasks(CustomResource):
     @api.expect(parser_delete)
     def delete(self):
         args = parser_delete.parse_args()
-        print(args)
+        db.delete_tasks(ids=args["ids"])
         res = response(status=1)
         return self.send(res)
 
@@ -142,12 +173,10 @@ class Task(CustomResource):
     @api.doc('get_tasks')
     def get(self, id_):
         '''Fetch an task given its identifier'''
-        for task in tasks:
-            if task['id'] == id_:
-                res = response(status=1, result=task)
-                return self.send(res)
-        api.abort(404)
-    
+        task = db.get_tasks(id_=id_)
+        res = response(status=1, result=task)
+        return self.send(res)
+        
     @api.doc('delete a task')
     def delete(self, id_):
         '''Fetch a session given its identifier'''

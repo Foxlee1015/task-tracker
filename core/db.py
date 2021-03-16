@@ -158,13 +158,16 @@ def insert_task_group(user_id, title, text, repeat_type):
         traceback.print_exc()
         return False
 
-def insert_task(group_id, datetime_=None):
-    datetime_ = stringify_given_datetime_or_current_datetime(datetime_)
+def insert_task(group_id, datetimes):
+    task_datimes = []
+    for datetime_ in datetimes:
+        datetime_ = stringify_given_datetime_or_current_datetime(datetime_)
+        task_datimes.append((group_id, datetime_))
     try:
         with get_db() as conn:
             cur = conn.cursor()
             sql = "INSERT into task(group_id, datetime) values (%s,%s)"
-            cur.execute(sql, (group_id, datetime_))
+            cur.executemany(sql, task_datimes)
             conn.commit()
 
         return True
@@ -199,6 +202,40 @@ def get_task_groups(id_=None):
     except:
         traceback.print_exc()
         return False
+
+
+def delete_tasks(ids):
+    """
+    :param ids: a list of task ids
+    """
+    try:
+        with get_db() as conn:
+            cur = conn.cursor()
+            sql = f"""
+                DELETE FROM task
+                WHERE id in ({','.join(str(id_) for id_ in ids)})
+            """
+            cur.execute(sql)
+            conn.commit()
+    except:
+        traceback.print_exc()
+
+
+def delete_task_groups(ids):
+    """
+    :param ids: a list of task ids
+    """
+    try:
+        with get_db() as conn:
+            cur = conn.cursor()
+            sql = f"""
+                DELETE FROM task_group
+                WHERE id in ({','.join(str(id_) for id_ in ids)})
+            """
+            cur.execute(sql)
+            conn.commit()
+    except:
+        traceback.print_exc()
 
 
 def get_tasks(id_=None):
