@@ -1,7 +1,7 @@
 from flask_restplus import Namespace, Resource, fields
 
 from core.db import insert_user, get_users, delete_users, backup_db
-from core.resource import CustomResource, response, json_serial
+from core.resource import CustomResource, response, json_serializer
 from core.utils import execute_command_ssh
 
 
@@ -16,7 +16,7 @@ class Users(CustomResource):
         '''List all users'''        
         users = get_users()
         for user in users:
-            user['create_datetime'] = json_serial(user['create_datetime'])
+            user['create_datetime'] = json_serializer(user['create_datetime'])
 
         res = response(status = 1, result = {"users":users})
         return self.send(res)

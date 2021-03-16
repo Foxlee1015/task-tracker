@@ -4,7 +4,7 @@ import traceback
 from flask_restplus import Namespace, Resource, fields, reqparse
 
 from core import db
-from core.resource import CustomResource, response, json_serial
+from core.resource import CustomResource, response, json_serializer
 
 api = Namespace('links', description='Links related operations')
 

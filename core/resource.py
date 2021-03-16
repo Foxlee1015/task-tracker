@@ -39,9 +39,17 @@ def response(**kwargs):
 
 from datetime import date, datetime
 
-def json_serial(obj):
+def json_serializer(obj, ignore_type_error=False):
     """JSON serializer for objects not serializable by default json code"""
 
     if isinstance(obj, (datetime, date)):
         return obj.isoformat()
-    raise TypeError ("Type %s not serializable" % type(obj))
+    if not ignore_type_error:
+        raise TypeError ("Type %s not serializable" % type(obj))
+
+def json_serializer_all_datetime_keys(data):
+
+    for key, value in data.items():
+        data[key] = json_serializer(value, ignore_type_error=True)
+
+    return data

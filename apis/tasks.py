@@ -4,7 +4,7 @@ import traceback
 from flask_restplus import Namespace, Resource, fields, reqparse
 
 from core import db
-from core.resource import CustomResource, response, json_serial
+from core.resource import CustomResource, response, json_serializer, json_serializer_all_datetime_keys
 
 api = Namespace('tasks', description='Tasks related operations')
 
@@ -42,13 +42,13 @@ parser_delete.add_argument('ids', type=str, required=True, action='split')
 class TaskGoup(CustomResource):
     @api.doc('get all tasks')
     def get(self):
-        tasks = db.get_tasks()
+        task_groups = db.get_task_groups()
         
         # sort by task datetime
-        for task in tasks:
-            task['datetime'] = json_serial(task['datetime'])
+        for task_group in task_groups:
+            task_group = json_serializer_all_datetime_keys(task_group)
         
-        res = response(status=1, result=tasks)
+        res = response(status=1, result=task_groups)
         return self.send(res)
     
     @api.doc('create a new task')
@@ -81,12 +81,13 @@ class TaskGoup(CustomResource):
 class Task(CustomResource):
     @api.doc('get_tasks')
     def get(self, id_):
-        '''Fetch an task given its identifier'''
-        for task in tasks:
-            if task['id'] == id_:
-                res = response(status=1, result=task)
-                return self.send(res)
-        api.abort(404)
+        '''Fetch a task group given its identifier'''
+        task_group = db.get_task_groups(id_=id_)
+        print(task_group)
+        task_group = json_serializer_all_datetime_keys(task_group)
+        
+        res = response(status=1, result=task_group)
+        return self.send(res)
     
     @api.doc('delete a task')
     def delete(self, id_):
@@ -105,7 +106,7 @@ class Tasks(CustomResource):
         
         # sort by task datetime
         for task in tasks:
-            task['datetime'] = json_serial(task['datetime'])
+            task['datetime'] = json_serializer(task['datetime'])
         
         res = response(status=1, result=tasks)
         return self.send(res)

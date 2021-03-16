@@ -173,7 +173,7 @@ def insert_task(group_id, datetime_=None):
         return False
 
 
-def get_tasks(id_=None):
+def get_task_groups(id_=None):
     try:
         with get_db() as conn:
 
@@ -181,15 +181,51 @@ def get_tasks(id_=None):
             sql = """
                 SELECT
                     *
-                FROM task
+                FROM
+                    task_group as tg
             """
-            
-            if id_ is not None:
+            if id_ is None:
+                cur.execute(sql)
+                conn.commit()
+                res = cur.fetchall()
+                
+            else:
                 sql = add_condition_to_query(sql, "id", id_)
+                cur.execute(sql)
+                conn.commit()
+                res = cur.fetchone()
 
-            cur.execute(sql)
-            conn.commit()
-            res = cur.fetchall()
+        return res
+    except:
+        traceback.print_exc()
+        return False
+
+
+def get_tasks(id_=None):
+    try:
+        with get_db() as conn:
+
+            cur = conn.cursor()
+            sql = """
+                SELECT
+                    t.*, tg.title, tg.text
+                FROM
+                    task as t
+                JOIN 
+                    task_group as tg
+                ON 
+                    t.group_id = tg.id
+            """
+            if id_ is None:
+                cur.execute(sql)
+                conn.commit()
+                res = cur.fetchall()
+                
+            else:
+                sql = add_condition_to_query(sql, "id", id_)
+                cur.execute(sql)
+                conn.commit()
+                res = cur.fetchone()
 
         return res
     except:
