@@ -8,32 +8,37 @@ class CustomResource(Resource):
     def __init__(self,api=None, *args, **kwargs):
         super().__init__(api, args, kwargs)
 
-    def send(self,*args, **kwargs):
+    def send(self, *args, **kwargs):
         headers = {}
         headers['Access-Control-Allow-Origin'] = '*'
         headers['Access-Control-Allow-Headers'] = '*'
         headers['Access-Control-Allow-Credentials'] = True
 
-        response_body = {'result' : None , 'message' : None}
+        response_body = {}
+        response_body['result'] = kwargs.get('result')
+        response_body['message'] = kwargs.get('message')
+        
+        # { : None , 'message' : None}
 
-        for arg in args:
-            if arg is not None:
-                for key in arg.keys():
-                    if key == "status":
-                        status = arg["status"]
-                    response_body[key] = arg[key]
+        # for arg in args:
+        #     if arg is not None:
+        #         for key in arg.keys():
+        #             if key == "status":
+        #                 status = arg["status"]
+        #             response_body[key] = arg[key]
 
-        for param_key in kwargs.keys():
-            response_body[param_key] =  kwargs[param_key]
+        # for param_key in kwargs.keys():
+        #     response_body[param_key] =  kwargs[param_key]
         
         json_encode = json.JSONEncoder().encode
-        return Response(json_encode(response_body), status=status, headers=headers, mimetype="application/json")
+        return Response(json_encode(response_body), status=kwargs["status"], 
+                        headers=headers, mimetype="application/json")
 
 
 def response(**kwargs):
     params = ['status', 'message', 'result']
     for param in params:
-        if param not in kwargs.keys():
+        if kwargs.get(param) is None:
             kwargs[param] = None
 
     return kwargs
