@@ -55,3 +55,11 @@ def stringify_given_datetime_or_current_datetime(datetime_=None, format_='%Y-%m-
     except Exception as e:
         traceback.print_exc()
         print(e)
+
+def check_if_only_int_numbers_exist(numbers):
+    for number in numbers:
+        try:
+            number = int(number)
+        except:
+            return False
+    return True
