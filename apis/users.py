@@ -15,7 +15,7 @@ class Users(CustomResource):
         '''List all users'''        
         users = get_users()
         for user in users:
-            user['create_datetime'] = json_serializer(user['create_datetime'])
+            user = json_serializer_all_datetime_keys(user)
 
         res = response(status=1, result =users)
         return self.send(res)
@@ -46,6 +46,7 @@ class User(CustomResource):
         '''Fetch a user given its identifier'''
            
         user = get_user(id_=id_)
+        user = json_serializer_all_datetime_keys(user)
         res = response(status=1, result=user)
         return self.send(res)
         
