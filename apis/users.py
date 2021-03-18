@@ -1,6 +1,6 @@
 from flask_restplus import Namespace, Resource, fields
 
-from core.db import insert_user, get_users, delete_users, backup_db
+from core.db import insert_user, get_user, get_users, delete_users, backup_db
 from core.resource import CustomResource, response, json_serializer_all_datetime_keys
 from core.utils import execute_command_ssh
 
