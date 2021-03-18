@@ -107,7 +107,7 @@ def backup_db():
 
 
 def insert_user(user_name, email, password, user_type):
-    import hashlib, uuid
+    import hashlib
     salt =  os.getenv('PASSWORD_SALT')
     password_with_salt = password + salt
     hashed_password = hashlib.sha512(password_with_salt.encode('utf-8')).hexdigest()
@@ -178,7 +178,7 @@ def delete_users(user_ids):
 
             sql = f"""
                 DELETE FROM user
-                WHERE id in ({','.join(str(user_Id) for user_id in user_ids)})
+                WHERE id in ({','.join(str(user_id) for user_id in user_ids)})
             """
             cur.execute(sql)
             conn.commit()

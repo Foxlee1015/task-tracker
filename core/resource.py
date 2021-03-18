@@ -19,13 +19,15 @@ class CustomResource(Resource):
         for arg in args:
             if arg is not None:
                 for key in arg.keys():
+                    if key == "status":
+                        status = arg["status"]
                     response_body[key] = arg[key]
 
         for param_key in kwargs.keys():
             response_body[param_key] =  kwargs[param_key]
         
         json_encode = json.JSONEncoder().encode
-        return Response(json_encode(response_body), headers=headers, mimetype="application/json")
+        return Response(json_encode(response_body), status=status, headers=headers, mimetype="application/json")
 
 
 def response(**kwargs):
@@ -50,7 +52,7 @@ def json_serializer(obj, ignore_type_error=False):
     else:
         raise TypeError ("Type %s not serializable" % type(obj))
         
-        
+
 def json_serializer_all_datetime_keys(data):
 
     for key, value in data.items():
