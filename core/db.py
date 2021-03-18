@@ -66,8 +66,25 @@ def init_db():
                     traceback.print_exc()
         conn.commit()
     
-    if not get_users(name='admin'):
-        insert_user('admin', '', 0)
+    _create_default_users()
+    
+
+def _create_default_users():
+    
+    if not get_user(name='admin'):
+        ADMIN_NAME = os.getenv('ADMIN_NAME')
+        ADMIN_EMAIL = os.getenv('ADMIN_EMAIL')
+        ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD')
+        print("Created admin user")
+        insert_user(ADMIN_NAME, ADMIN_EMAIL, ADMIN_PASSWORD, 0)
+    
+    if not get_user(name='daehan'):
+        SUPER_USER_NAME = os.getenv('SUPER_USER_NAME')
+        SUPER_USER_EMAIL = os.getenv('SUPER_USER_EMAIL')
+        SUPER_USER_PASSWORD = os.getenv('SUPER_USER_PASSWORD')
+        print("Created super user")
+        insert_user(SUPER_USER_NAME, SUPER_USER_EMAIL, SUPER_USER_PASSWORD, 0)
+
 
 def backup_db():
     BACKUP_PATH = '/var/backups'
@@ -89,13 +106,17 @@ def backup_db():
         print("db back error : ", e)
 
 
-def insert_user(user_name, email, user_type):
+def insert_user(user_name, email, password, user_type):
+    import hashlib, uuid
+    salt =  os.getenv('PASSWORD_SALT')
+    password_with_salt = password + salt
+    hashed_password = hashlib.sha512(password_with_salt.encode('utf-8')).hexdigest()
     try:
         with get_db() as conn:
 
             cur = conn.cursor()
-            sql = "INSERT into user(name, email, user_type) values (%s,%s,%s)"
-            cur.execute(sql, (user_name, email, user_type))
+            sql = "INSERT into user(name, email, password, user_type) values (%s,%s,%s,%s)"
+            cur.execute(sql, (user_name, email, hashed_password, user_type))
             conn.commit()
 
         return True
@@ -104,7 +125,7 @@ def insert_user(user_name, email, user_type):
         return False
 
 
-def get_users(name=None):
+def get_users():
     try:
         with get_db() as conn:
 
@@ -113,8 +134,6 @@ def get_users(name=None):
                 SELECT *
                 FROM user
             """
-            if name is not None:
-                sql = add_condition_to_query(sql, "name", name)
             cur.execute(sql)
             conn.commit()
             res = cur.fetchall()
@@ -122,7 +141,31 @@ def get_users(name=None):
     except:
         traceback.print_exc()
         return False
-    
+
+
+def get_user(id_=None, name=None):
+    try:
+        with get_db() as conn:
+
+            cur = conn.cursor()
+            sql = """
+                SELECT *
+                FROM user
+            """
+            if id_ is not None:
+                sql = add_condition_to_query(sql, "id", id_)
+            elif name is not None:
+                sql = add_condition_to_query(sql, "name", name)
+        
+            cur.execute(sql)
+            conn.commit()
+            res = cur.fetchone()
+
+            return res
+    except:
+        traceback.print_exc()
+        return False
+
 
 def delete_users(user_ids):
     """

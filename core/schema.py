@@ -1,8 +1,9 @@
 schema="""
 CREATE TABLE IF NOT EXISTS `user` (
     `id`                    INT(11) NOT NULL AUTO_INCREMENT,
-    `name`                  VARCHAR(50) UNIQUE,
-    `email`                 VARCHAR(50),
+    `name`                  VARCHAR(12) UNIQUE,
+    `email`                 VARCHAR(100),
+    `password`              VARCHAR(200) NOT NULL,
     `user_type`             INT(3) DEFAULT 2,
     `login_counting`        INT(5) DEFAULT 0,
     `create_datetime`       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

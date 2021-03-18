@@ -12,13 +12,12 @@ api = Namespace('users', description='Users related operations')
 class Users(CustomResource):
     @api.doc('list_users')
     def get(self):
-        print('test')
         '''List all users'''        
         users = get_users()
         for user in users:
             user['create_datetime'] = json_serializer(user['create_datetime'])
 
-        res = response(status = 1, result = {"users":users})
+        res = response(status=1, result =users)
         return self.send(res)
 
 
@@ -26,8 +25,8 @@ class Users(CustomResource):
     def post(self):
         '''Create an user'''
         result = insert_user("1", "b", 2)
-        print(result)
-        return "ok"
+        res = response(status=1)
+        return self.send(res)
 
 
     @api.doc('delete_users')
@@ -43,9 +42,10 @@ class Users(CustomResource):
 @api.response(404, 'User not found')
 class User(CustomResource):
     @api.doc('get_user')
-    def get(self, id):
+    def get(self, id_):
         '''Fetch a user given its identifier'''
-        for user in users:
-            if user['id'] == id:
-                return user
-        api.abort(404)
+           
+        user = get_user(id_=id_)
+        res = response(status=1, result=user)
+        return self.send(res)
+        
