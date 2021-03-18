@@ -6,6 +6,7 @@ from flask_restplus import Namespace, Resource, fields, reqparse
 
 from core import db
 from core.resource import CustomResource, response, json_serializer, json_serializer_all_datetime_keys
+from core.utils import check_if_only_int_numbers_exist
 
 api = Namespace('tasks', description='Tasks related operations')
 
@@ -71,7 +72,7 @@ parser_create.add_argument('link_ids', type=str, location='form', action='split'
 parser_delete = reqparse.RequestParser()
 parser_delete.add_argument('ids', type=str, required=True, action='split')
 
-@api.route('/group')
+@api.route('/groups')
 class TaskGoup(CustomResource):
     @api.doc('get all tasks')
     def get(self):
@@ -81,8 +82,7 @@ class TaskGoup(CustomResource):
         for task_group in task_groups:
             task_group = json_serializer_all_datetime_keys(task_group)
         
-        res = response(status=1, result=task_groups)
-        return self.send(res)
+        return self.send(status=200, result=task_groups)
     
     @api.doc('create a new task')
     @api.expect(parser_create)
@@ -93,22 +93,23 @@ class TaskGoup(CustomResource):
         repeat_type = args["repeat_type"]
         link_ids = args.get("link_ids")
         
-        result = create_task(1, title, text, repeat_type, link_ids)
-        status = 1 if result else 0
+        result = create_task(31, title, text, repeat_type, link_ids)
+        status = 201 if result else 400
+        return self.send(status=status)
 
-        res = response(status=status)
-        return self.send(res)
-
-    @api.doc('delete tasks')
+    @api.doc('delete task group')
     @api.expect(parser_delete)
     def delete(self):
         args = parser_delete.parse_args()
-        print(args)
-        res = response(status=1)
-        return self.send(res)
+        ids = args["ids"]
+        if check_if_only_int_numbers_exist(ids):
+            result = db.delete_task_groups(args['ids'])
+            return self.send(status=200)
+        else:
+            return self.send(status=400, message="Check user ids")
 
 
-@api.route('/group/<id_>')
+@api.route('/group/<int:id_>')
 @api.param('id_', 'The task identifier')
 @api.response(404, 'Task not found')
 class Task(CustomResource):
@@ -116,17 +117,17 @@ class Task(CustomResource):
     def get(self, id_):
         '''Fetch a task group given its identifier'''
         task_group = db.get_task_groups(id_=id_)
-        task_group = json_serializer_all_datetime_keys(task_group)
-        
-        res = response(status=1, result=task_group)
-        return self.send(res)
-    
+        if task_group:
+            task_group = json_serializer_all_datetime_keys(task_group)
+            return self.send(status=200, result=task_group)
+        else:
+            return self.send(status=404, result=None)
+
     @api.doc('delete a task')
     def delete(self, id_):
         '''Fetch a session given its identifier'''
         db.delete_tasks(ids=[id_])
-        res = response(status=1)
-        return self.send(res)
+        return self.send(status=200)
 
 
 @api.route('/')
@@ -139,34 +140,38 @@ class Tasks(CustomResource):
         for task in tasks:
             task['datetime'] = json_serializer(task['datetime'])
         
-        res = response(status=1, result=tasks)
-        return self.send(res)
-    
-    @api.doc('create a new task')
-    @api.expect(parser_create)
-    def post(self):
-        args = parser_create.parse_args()
-        title = args["title"]
-        text = args["text"]        
-        repeat_type = args["repeat_type"]
-        link_ids = args.get("link_ids")
-        
-        result = create_task(1, title, text, repeat_type, link_ids)
-        status = 1 if result else 0
+        if tasks:
+            return self.send(status=200, result=tasks)
+        else:
+            return self.send(status=203, result=None)
 
-        res = response(status=status)
-        return self.send(res)
+    # @api.doc('create a new task')
+    # @api.expect(parser_create)
+    # def post(self):
+    #     args = parser_create.parse_args()
+    #     title = args["title"]
+    #     text = args["text"]        
+    #     repeat_type = args["repeat_type"]
+    #     link_ids = args.get("link_ids")
+        
+    #     result = create_task(1, title, text, repeat_type, link_ids)
+    #     status = 201 if result else 400
+    #     return self.send(status=status)
 
     @api.doc('delete tasks')
     @api.expect(parser_delete)
     def delete(self):
         args = parser_delete.parse_args()
-        db.delete_tasks(ids=args["ids"])
-        res = response(status=1)
-        return self.send(res)
+        ids = args["ids"]
+        if check_if_only_int_numbers_exist(ids):
+            result = db.delete_tasks(ids=ids)
+            return self.send(status=200)
+        else:
+            return self.send(status=400, message="Check user ids")
 
 
-@api.route('/<id_>')
+
+@api.route('/<int:id_>')
 @api.param('id_', 'The task identifier')
 @api.response(404, 'Task not found')
 class Task(CustomResource):
@@ -174,13 +179,14 @@ class Task(CustomResource):
     def get(self, id_):
         '''Fetch an task given its identifier'''
         task = db.get_tasks(id_=id_)
-        res = response(status=1, result=task)
-        return self.send(res)
+        if task is None:
+            return self.send(status=404, result=None) 
+        task = json_serializer_all_datetime_keys(task)
+        return self.send(status=200, result=task)
+        
         
     @api.doc('delete a task')
     def delete(self, id_):
         '''Fetch a session given its identifier'''
-        if id == 1:
-            return id
-        else:
-            api.abort(404)
+        result = delete_tasks([id_])
+        return self.send(status=200)

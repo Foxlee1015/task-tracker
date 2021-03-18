@@ -51,7 +51,7 @@ class Users(CustomResource):
         '''        
         users = _get_users()
         status = 200 if users else 203
-        return self.send(status=200, result=users)
+        return self.send(status=status, result=users)
 
 
     @api.doc('create a new user')

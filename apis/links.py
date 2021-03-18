@@ -41,9 +41,8 @@ parser_delete.add_argument('ids', type=str, required=True, action='split')
 class Links(CustomResource):
     @api.doc('get all links')
     def get(self):
-        links = db.get_links()        
-        res = response(status=1, result=links)
-        return self.send(res)
+        links = db.get_links()
+        return self.send(status=200, result=links)
     
     @api.doc('create a new link')
     @api.expect(parser_create)
@@ -54,18 +53,15 @@ class Links(CustomResource):
         image_url = args.get("image_url")
         
         result = create_link(1, url, description, image_url)
-        status = 1 if result else 0
-
-        res = response(status=status)
-        return self.send(res)
+        status = 201 if result else 400
+        return self.send(status=status)
 
     @api.doc('delete links')
     @api.expect(parser_delete)
     def delete(self):
         args = parser_delete.parse_args()
         delete_links(args["ids"])
-        res = response(status=1)
-        return self.send(res)
+        return self.send(status=200)
 
 
 @api.route('/<id_>')
@@ -77,18 +73,19 @@ class Task(CustomResource):
         '''Fetch an link given its identifier'''
         try:
             link = db.get_links(id_=id_)
-            res = response(status=1, result=link)
+            if link is None:
+                return self.send(status=404, result=None)
+            return self.send(status=200, result=link)
         except:
-            res = response(status=0)
-        return self.send(res)
-    
+            traceback.print_exc()
+            return self.send(status=400, result=None)
+
+
     @api.doc('delete a link')
     def delete(self, id_):
         '''delete a link given its identifier'''
         try:
             delete_links([id_])
-            res = response(status=1)
+            return self.send(status=200)
         except:
-            res = response(status=0)
-        
-        return self.send(res)
+            return self.send(status=400)
