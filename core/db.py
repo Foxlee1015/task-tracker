@@ -131,7 +131,7 @@ def get_users():
 
             cur = conn.cursor()
             sql = """
-                SELECT id, name, email, user_type, login_counting
+                SELECT id, name, email, user_type, login_counting, create_datetime, update_datetime
                 FROM user
             """
             cur.execute(sql)
@@ -149,7 +149,7 @@ def get_user(id_=None, name=None):
 
             cur = conn.cursor()
             sql = """
-                SELECT id, name, email, user_type, login_counting
+                SELECT id, name, email, user_type, login_counting, create_datetime, update_datetime
                 FROM user
             """
             if id_ is not None:
