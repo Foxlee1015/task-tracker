@@ -37,8 +37,8 @@ class Users(CustomResource):
         return "ok"
 
 
-@api.route('/<_id>')
-@api.param('_id', 'The user identifier')
+@api.route('/<id_>')
+@api.param('id_', 'The user identifier')
 @api.response(404, 'User not found')
 class User(CustomResource):
     @api.doc('get_user')
