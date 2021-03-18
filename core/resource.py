@@ -44,9 +44,13 @@ def json_serializer(obj, ignore_type_error=False):
 
     if isinstance(obj, (datetime, date)):
         return obj.isoformat()
-    if not ignore_type_error:
-        raise TypeError ("Type %s not serializable" % type(obj))
 
+    if ignore_type_error:
+        return obj
+    else:
+        raise TypeError ("Type %s not serializable" % type(obj))
+        
+        
 def json_serializer_all_datetime_keys(data):
 
     for key, value in data.items():
