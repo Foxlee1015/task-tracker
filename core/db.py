@@ -189,12 +189,12 @@ def delete_users(user_ids):
         return False
 
 
-def insert_task_group(user_id, title, text, repeat_type):
+def insert_task_group(user_id, title, text, repeat_type, selected_date=None, end_date=None):
     try:
         with get_db() as conn:
             cur = conn.cursor()
-            sql = "INSERT into task_group(title, text, user_id, repeat_type) values (%s,%s,%s, %s)"
-            cur.execute(sql, (title, text, user_id, repeat_type))
+            sql = "INSERT into task_group(title, text, user_id, repeat_type, selected_date, end_date) values (%s,%s,%s,%s,%s,%s)"
+            cur.execute(sql, (title, text, user_id, repeat_type, selected_date, end_date))
             conn.commit()
             return cur.lastrowid
     except:
@@ -312,9 +312,34 @@ def get_tasks(id_=None):
         traceback.print_exc()
         return False
 
+def get_task_groups_links(task_groupd_id):
+    # TODO: check user id of link
+    try:
+        with get_db() as conn:
+
+            cur = conn.cursor()
+            sql = """
+                SELECT
+                    lk.*
+                FROM
+                    task_group_link as tglk
+                JOIN 
+                    link as lk
+                ON
+                    tglk.link_id = lk.id
+            """
+            sql = add_condition_to_query(sql, "tglk.task_group_id", task_groupd_id)
+            cur.execute(sql)
+            conn.commit()
+            res = cur.fetchall()
+
+        return res
+    except:
+        traceback.print_exc()
+        return False
+    
 
 def insert_link(user_id, url,description, image_url):
-    print(url, description, image_url)
     try:
         with get_db() as conn:
             cur = conn.cursor()

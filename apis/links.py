@@ -52,7 +52,7 @@ class Links(CustomResource):
         description = args["description"]        
         image_url = args.get("image_url")
         
-        result = create_link(1, url, description, image_url)
+        result = create_link(2, url, description, image_url)
         status = 201 if result else 400
         return self.send(status=status)
 

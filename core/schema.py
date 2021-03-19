@@ -36,9 +36,9 @@ CREATE TABLE IF NOT EXISTS `task` (
 
 CREATE TABLE IF NOT EXISTS `link` (
     `id`                    INT(11) NOT NULL AUTO_INCREMENT,
-    `url`                   VARCHAR(300),
+    `url`                   VARCHAR(1000),
     `description`           VARCHAR(200),
-    `image_url`             VARCHAR(300),
+    `image_url`             VARCHAR(1000),
     `user_id`               INT(11) NOT NULL,
     PRIMARY KEY(`id`),
     CONSTRAINT FOREIGN KEY (`user_id`) REFERENCES `task_tracker`.`user` (`id`) ON UPDATE CASCADE ON DELETE CASCADE

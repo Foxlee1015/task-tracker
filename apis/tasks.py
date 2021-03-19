@@ -11,11 +11,18 @@ from core.utils import check_if_only_int_numbers_exist
 api = Namespace('tasks', description='Tasks related operations')
 
 
-def create_task(user_id, title, text, repeat_type, link_ids):
+def _create_task(user_id, title, text, repeat_type, link_ids, start_date, end_date):
+    """Create a task group annd tasks based on the task group 
+    
+    NOTE: 
+        First, create a new task group and then create tasks 
+        depends on repeat time, start date and end date
+    """
     try:
-        task_group_id = db.insert_task_group(user_id, title, text, repeat_type)
-        task_dates = create_task_dates_by_repeat_type(repeat_type, start_date=None, end_date=None)
-        print(task_dates)
+        task_dates = create_task_dates_by_repeat_type(repeat_type, 
+                                                    start_date, end_date)
+        task_group_id = db.insert_task_group(user_id, title, text, repeat_type, selected_date=task_dates[0], end_date=task_dates[-1])
+        
         db.insert_task(task_group_id, task_dates)
         
         if link_ids is not None:
@@ -29,11 +36,12 @@ def create_task(user_id, title, text, repeat_type, link_ids):
         traceback.print_exc()
         return False
 
-def create_task_dates_by_repeat_type(repeat_type, start_date=None, end_date=None):
+def create_task_dates_by_repeat_type(repeat_type, start_date, end_date):
     """
      
     :param repeat_type: 0 - no repeat, 1 - weekly, 2 - monthly, 3 - yearly, 4 - Biweekly
     """
+    print(start_date, end_date)
     if start_date is None:
         start_date = datetime.datetime.now()
 
@@ -92,8 +100,11 @@ class TaskGoup(CustomResource):
         text = args["text"]        
         repeat_type = args["repeat_type"]
         link_ids = args.get("link_ids")
-        
-        result = create_task(31, title, text, repeat_type, link_ids)
+        start_date = args.get("selected_date")
+        end_date = args.get("end_date")
+
+        result = _create_task(2, title, text, repeat_type, link_ids, 
+                                start_date, end_date)
         status = 201 if result else 400
         return self.send(status=status)
 
@@ -119,6 +130,7 @@ class Task(CustomResource):
         task_group = db.get_task_groups(id_=id_)
         if task_group:
             task_group = json_serializer_all_datetime_keys(task_group)
+            task_group["links"] = db.get_task_groups_links(id_)
             return self.send(status=200, result=task_group)
         else:
             return self.send(status=404, result=None)
@@ -144,19 +156,6 @@ class Tasks(CustomResource):
             return self.send(status=200, result=tasks)
         else:
             return self.send(status=203, result=None)
-
-    # @api.doc('create a new task')
-    # @api.expect(parser_create)
-    # def post(self):
-    #     args = parser_create.parse_args()
-    #     title = args["title"]
-    #     text = args["text"]        
-    #     repeat_type = args["repeat_type"]
-    #     link_ids = args.get("link_ids")
-        
-    #     result = create_task(1, title, text, repeat_type, link_ids)
-    #     status = 201 if result else 400
-    #     return self.send(status=status)
 
     @api.doc('delete tasks')
     @api.expect(parser_delete)
