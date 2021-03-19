@@ -6,7 +6,7 @@ from flask_restplus import Namespace, Resource, fields, reqparse
 
 from core import db
 from core.resource import CustomResource, response, json_serializer, json_serializer_all_datetime_keys
-from core.utils import check_if_only_int_numbers_exist
+from core.utils import check_if_only_int_numbers_exist, token_required
 
 api = Namespace('tasks', description='Tasks related operations')
 
@@ -79,6 +79,9 @@ parser_create.add_argument('link_ids', type=str, location='form', action='split'
 
 parser_delete = reqparse.RequestParser()
 parser_delete.add_argument('ids', type=str, required=True, action='split')
+parser_delete.add_argument('Authorization', type=str, required=True, location='headers')
+
+
 
 @api.route('/groups')
 class TaskGoup(CustomResource):
@@ -110,7 +113,9 @@ class TaskGoup(CustomResource):
 
     @api.doc('delete task group')
     @api.expect(parser_delete)
-    def delete(self):
+    @token_required
+    def delete(self, current_user):
+        print("ccc", current_user)
         args = parser_delete.parse_args()
         ids = args["ids"]
         if check_if_only_int_numbers_exist(ids):

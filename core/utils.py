@@ -1,8 +1,13 @@
 from datetime import datetime
+import jwt
 import os
 import paramiko
 import traceback
+import string
+import random
+import hashlib
 
+from flask import request, current_app
 from dotenv import load_dotenv
 
 APP_ROOT = os.path.join(os.path.dirname(__file__), '..')   # refers to application_top
@@ -14,6 +19,35 @@ port = int(os.getenv('SSH_PORT'))
 usr = os.getenv('SSH_USER')
 pwd = os.getenv('SSH_PASSWORD')
 
+
+def token_required(f):
+    def wrapper(*args, **kwargs):
+        # print(request.headers)
+        auth_header = request.headers.get('Authorization')
+        current_user = 1
+        print(auth_header)
+        if auth_header:
+            try:
+                access_token = auth_header.split(' ')[1]
+                try:
+                    token = jwt.decode(access_token, current_app.config['SECRET_KEY'])
+                    print("token : " , token)
+                # except jwt.ExpiredSignatureError as e:
+                #     raise e
+                # except (jwt.DecodeError, jwt.InvalidTokenError) as e:
+                #     raise e
+                except:
+                    return False #api.abort(401, 'Unknown token error')
+
+            except IndexError:
+                raise jwt.InvalidTokenError
+        else:
+            return False # api.abort(403, 'Token required')
+        return f(*args, **kwargs, current_user=current_user)
+
+    wrapper.__doc__ = f.__doc__
+    wrapper.__name__ = f.__name__
+    return wrapper
 
 def execute_command_ssh(cmd):
     client = paramiko.SSHClient()
@@ -63,3 +97,19 @@ def check_if_only_int_numbers_exist(numbers):
         except:
             return False
     return True
+
+def random_string(length):
+    return ''.join(random.choice(string.ascii_letters) for m in range(length))
+
+def generate_hashed_password(password):
+    random_salt =  random_string(random.randint(4, 10))
+    password_with_salt = password + random_salt
+    hashed_password = hashlib.sha512(password_with_salt.encode('utf-8')).hexdigest()
+    return hashed_password, random_salt
+
+def verify_password(password, salt, hashed_password):
+    password_with_salt = password + salt
+    if hashed_password == hashlib.sha512(password_with_salt.encode('utf-8')).hexdigest():
+        return True
+    else:
+        False

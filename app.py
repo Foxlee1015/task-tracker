@@ -2,7 +2,7 @@ import time
 from flask import Flask
 from flask_cors import CORS
 
-from apis import blueprint as api
+from resources import blueprint as api
 from core.db import init_db, backup_db
 from core.errors import DbConnectError
 
@@ -21,6 +21,7 @@ def background_task():
 
 def create_app():
     app = Flask(__name__)
+    app.config['SECRET_KEY'] = "ssseetrr"
     # CORS(app)
     cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
     app.register_blueprint(api, url_prefix='/api')

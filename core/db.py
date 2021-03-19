@@ -9,7 +9,7 @@ import pymysql
 from dotenv import load_dotenv
 
 from core import errors
-from core.utils import docker_command, stringify_given_datetime_or_current_datetime
+from core.utils import docker_command, stringify_given_datetime_or_current_datetime, generate_hashed_password
 
 
 # load dotenv in the base root
@@ -107,19 +107,35 @@ def backup_db():
 
 
 def insert_user(user_name, email, password, user_type):
-    import hashlib
-    salt =  os.getenv('PASSWORD_SALT')
-    password_with_salt = password + salt
-    hashed_password = hashlib.sha512(password_with_salt.encode('utf-8')).hexdigest()
+    hashed_password, salt = generate_hashed_password(password)
     try:
         with get_db() as conn:
 
             cur = conn.cursor()
-            sql = "INSERT into user(name, email, password, user_type) values (%s,%s,%s,%s)"
-            cur.execute(sql, (user_name, email, hashed_password, user_type))
+            sql = "INSERT into user(name, email, password, salt, user_type) values (%s,%s,%s,%s,%s)"
+            cur.execute(sql, (user_name, email, hashed_password, salt, user_type))
             conn.commit()
 
         return True
+    except:
+        traceback.print_exc()
+        return False
+
+
+def get_user_hashed_password_with_user_id(name):
+    try:
+        with get_db() as conn:
+
+            cur = conn.cursor()
+            sql = """
+                SELECT id, password, salt
+                FROM user
+            """
+            sql = add_condition_to_query(sql, "name", name)
+            cur.execute(sql)
+            conn.commit()
+            res = cur.fetchone()
+            return res
     except:
         traceback.print_exc()
         return False
