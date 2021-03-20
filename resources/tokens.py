@@ -25,7 +25,7 @@ def create_jwt(username):
     }
     token_payload = {
         "iss": username,
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(JWT_EXPIRATION_HOURS=8),
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=JWT_EXPIRATION_HOURS),
         "iat": datetime.datetime.utcnow(),
         "is_admin": is_admin
     }
