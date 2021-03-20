@@ -50,7 +50,10 @@ def create_task_dates_by_repeat_type(repeat_type, start_date, end_date):
         return task_dates
 
     if end_date is None:
-        end_date = start_date + datetime.timedelta(days=180)
+        if repeat_type == 3:
+            end_date = start_date + datetime.timedelta(years=365*5)
+        else:
+            end_date = start_date + datetime.timedelta(days=180)
 
     task_date = start_date
     while task_date <= end_date:
@@ -114,7 +117,10 @@ class TaskGoup(CustomResource):
     @api.doc('delete task group')
     @api.expect(parser_delete)
     @token_required
-    def delete(self, current_user):
+    def delete(self, current_user, **kwargs):
+        if current_user is None:
+            print(kwargs)
+            return self.send(status=400, message=kwargs["error_msg"])
         print("ccc", current_user)
         args = parser_delete.parse_args()
         ids = args["ids"]

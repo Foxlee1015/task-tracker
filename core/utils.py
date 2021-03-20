@@ -8,6 +8,7 @@ import random
 import hashlib
 
 from flask import request, current_app
+from flask_restplus import abort
 from dotenv import load_dotenv
 
 APP_ROOT = os.path.join(os.path.dirname(__file__), '..')   # refers to application_top
@@ -22,28 +23,23 @@ pwd = os.getenv('SSH_PASSWORD')
 
 def token_required(f):
     def wrapper(*args, **kwargs):
-        # print(request.headers)
         auth_header = request.headers.get('Authorization')
-        current_user = 1
-        print(auth_header)
+        user_info = None
+        kwargs["error_msg"] = None
         if auth_header:
             try:
                 access_token = auth_header.split(' ')[1]
                 try:
-                    token = jwt.decode(access_token, current_app.config['SECRET_KEY'])
-                    print("token : " , token)
-                # except jwt.ExpiredSignatureError as e:
-                #     raise e
-                # except (jwt.DecodeError, jwt.InvalidTokenError) as e:
-                #     raise e
-                except:
-                    return False #api.abort(401, 'Unknown token error')
-
-            except IndexError:
-                raise jwt.InvalidTokenError
+                    user_info = jwt.decode(access_token, current_app.config["SECRET_KEY"], algorithms=["HS256"])
+                except jwt.ExpiredSignatureError:
+                    kwargs["error_msg"] = "Token has been expired error"
+                except jwt.exceptions.DecodeError as e:
+                    kwargs["error_msg"] = "Token decode error"
+            except Exception as e:
+                kwargs["error_msg"] = "Token format error"
         else:
-            return False # api.abort(403, 'Token required')
-        return f(*args, **kwargs, current_user=current_user)
+            kwargs["error_msg"] = "Token is required error"
+        return f(*args, **kwargs, current_user=user_info)
 
     wrapper.__doc__ = f.__doc__
     wrapper.__name__ = f.__name__

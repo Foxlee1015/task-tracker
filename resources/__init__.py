@@ -18,7 +18,6 @@ api = Api(
     description='A description'
 )
 
-
 api.add_namespace(tasks)
 api.add_namespace(links)
 api.add_namespace(logs)
