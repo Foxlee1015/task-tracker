@@ -54,7 +54,7 @@ class Token(CustomResource):
         username = args["username"]
         password = args["password"]
 
-        if return_user_id_if_user_password_is_correct(username, password)
+        if return_user_id_if_user_password_is_correct(username, password):
             res = create_jwt(username)
             return self.send(status=201, result=res)
         else:
