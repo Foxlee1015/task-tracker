@@ -44,6 +44,8 @@ def create_task_dates_by_repeat_type(repeat_type, start_date, end_date):
     print(start_date, end_date)
     if start_date is None:
         start_date = datetime.datetime.now()
+    else:
+        start_date = datetime.datetime.strptime(start_date, '%Y-%m-%dT%H:%M')
 
     task_dates = [start_date]
     if repeat_type == 0:
@@ -54,6 +56,8 @@ def create_task_dates_by_repeat_type(repeat_type, start_date, end_date):
             end_date = start_date + datetime.timedelta(years=365*5)
         else:
             end_date = start_date + datetime.timedelta(days=180)
+    else:
+        end_date = datetime.datetime.strptime(end_date, '%Y-%m-%dT%H:%M')
 
     task_date = start_date
     while task_date <= end_date:
