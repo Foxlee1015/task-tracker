@@ -27,16 +27,11 @@ def token_required(f):
         user_info = None
         kwargs["error_msg"] = None
         if auth_header:
-            try:
-                access_token = auth_header.split(' ')[1]
-                try:
-                    user_info = jwt.decode(access_token, current_app.config["SECRET_KEY"], algorithms=["HS256"])
-                except jwt.ExpiredSignatureError:
-                    kwargs["error_msg"] = "Token has been expired error"
-                except jwt.exceptions.DecodeError as e:
-                    kwargs["error_msg"] = "Token decode error"
-            except Exception as e:
-                kwargs["error_msg"] = "Token format error"
+            from resources.tokens import get_user_info_if_token_is_valid
+            user_info, message_if_not_valid = get_user_info_if_token_is_valid(auth_header)
+            if message_if_not_valid != "":
+                user_info = None
+                kwargs["error_msg"] = message_if_not_valid
         else:
             kwargs["error_msg"] = "Token is required error"
         return f(*args, **kwargs, current_user=user_info)

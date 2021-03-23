@@ -123,9 +123,7 @@ class TaskGoup(CustomResource):
     @token_required
     def delete(self, current_user, **kwargs):
         if current_user is None:
-            print(kwargs)
             return self.send(status=400, message=kwargs["error_msg"])
-        print("ccc", current_user)
         args = parser_delete.parse_args()
         ids = args["ids"]
         if check_if_only_int_numbers_exist(ids):

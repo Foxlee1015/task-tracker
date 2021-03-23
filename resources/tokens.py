@@ -39,6 +39,19 @@ def refresh_jwt(user_id):
     token = 'b'
     return x
 
+def get_user_info_if_token_is_valid(token):
+    try:
+        access_token = token.split(' ')[1]
+        try:
+            user_info = jwt.decode(access_token, current_app.config["SECRET_KEY"], algorithms=["HS256"])
+            return user_info, ""
+        except jwt.ExpiredSignatureError:
+            return None, "Token has been expired error"
+        except jwt.exceptions.DecodeError as e:
+             return None, "Token decode error"
+    except Exception as e:
+         return None, "Token format error"
+
     
 parser_create = reqparse.RequestParser()
 parser_create.add_argument('username', type=str, required=True, action='form')
@@ -51,15 +64,32 @@ class Token(CustomResource):
     @api.expect(parser_create)
     def post(self):
         args = parser_create.parse_args()
-        username = args["username"]
-        password = args["password"]
+        username = args.get("username")
+        password = args.get("password")
 
         if not db.get_user(name=username):
             return self.send(status=404)
-        
         if return_user_id_if_user_password_is_correct(username, password):
             res = create_jwt(username)
             return self.send(status=201, result=res)
-        else:
-            return self.send(status=400)
+        return self.send(status=400)
 
+   
+parser_validation = reqparse.RequestParser()
+parser_validation.add_argument('Authorization', type=str, required=True, location='headers')
+
+@api.route('/validate')
+class TokenValidation(CustomResource):
+    @api.doc('validate jwt')
+    @api.expect(parser_validation)
+    def post(self):
+        args = parser_validation.parse_args()
+        token = args.get("Authorization")
+        
+        if token is not None:
+            user_info, message_if_not_valid = get_user_info_if_token_is_valid(token)
+            if user_info is not None:
+                return self.send(status=200, result=user_info)
+            else:
+                 return self.send(status=400, message=message_if_not_valid)
+        return self.send(status=400)
