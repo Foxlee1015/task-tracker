@@ -90,14 +90,14 @@ parser_delete.add_argument('ids', type=str, required=True, action='split')
 parser_delete.add_argument('Authorization', type=str, required=True, location='headers')
 
 
-parser_get = reqparse.RequestParser()
-parser_get.add_argument('Authorization', type=str, required=True, location='headers')
+parser_header = reqparse.RequestParser()
+parser_header.add_argument('Authorization', type=str, required=True, location='headers')
 
 
 @api.route('/groups')
 class TaskGoup(CustomResource):
     @api.doc('get all tasks')
-    @api.expect(parser_get)
+    @api.expect(parser_header)
     @token_required
     def get(self, current_user, **kwargs):
         if current_user is None:
@@ -112,6 +112,7 @@ class TaskGoup(CustomResource):
     
     @api.doc('create a new task')
     @api.expect(parser_create)
+    @api.expect(parser_header)
     @token_required
     def post(self, current_user, **kwargs):
         if current_user is None:
@@ -124,7 +125,7 @@ class TaskGoup(CustomResource):
         start_date = args.get("selected_date")
         end_date = args.get("end_date")
 
-        result = _create_task(2, title, text, repeat_type, link_ids, 
+        result = _create_task(current_user["uid"], title, text, repeat_type, link_ids, 
                                 start_date, end_date)
         status = 201 if result else 400
         return self.send(status=status)
@@ -149,7 +150,11 @@ class TaskGoup(CustomResource):
 @api.response(404, 'Task not found')
 class Task(CustomResource):
     @api.doc('get_tasks')
-    def get(self, id_):
+    @api.expect(parser_header)
+    @token_required
+    def get(self, id_, current_user, **kwargs):
+        if current_user is None:
+            return self.send(status=400, message=kwargs["error_msg"])
         '''Fetch a task group given its identifier'''
         task_group = db.get_task_groups(id_=id_)
         if task_group:
@@ -160,7 +165,11 @@ class Task(CustomResource):
             return self.send(status=404, result=None)
 
     @api.doc('delete a task')
-    def delete(self, id_):
+    @api.expect(parser_header)
+    @token_required
+    def delete(self, id_, current_user, **kwargs):
+        if current_user is None:
+            return self.send(status=400, message=kwargs["error_msg"])
         '''Fetch a session given its identifier'''
         db.delete_tasks(ids=[id_])
         return self.send(status=200)
@@ -169,7 +178,11 @@ class Task(CustomResource):
 @api.route('/')
 class Tasks(CustomResource):
     @api.doc('get all tasks')
-    def get(self):
+    @api.expect(parser_header)
+    @token_required
+    def get(self, current_user, **kwargs):
+        if current_user is None:
+            return self.send(status=400, message=kwargs["error_msg"])
         tasks = db.get_tasks()
         
         # sort by task datetime
@@ -183,7 +196,11 @@ class Tasks(CustomResource):
 
     @api.doc('delete tasks')
     @api.expect(parser_delete)
-    def delete(self):
+    @api.expect(parser_header)
+    @token_required
+    def delete(self, current_user, **kwargs):
+        if current_user is None:
+            return self.send(status=400, message=kwargs["error_msg"])
         args = parser_delete.parse_args()
         ids = args["ids"]
         if check_if_only_int_numbers_exist(ids):
@@ -199,7 +216,11 @@ class Tasks(CustomResource):
 @api.response(404, 'Task not found')
 class Task(CustomResource):
     @api.doc('get_tasks')
-    def get(self, id_):
+    @api.expect(parser_header)
+    @token_required
+    def get(self, id_, current_user, **kwargs):
+        if current_user is None:
+            return self.send(status=400, message=kwargs["error_msg"])
         '''Fetch an task given its identifier'''
         task = db.get_tasks(id_=id_)
         if task is None:
@@ -209,7 +230,11 @@ class Task(CustomResource):
         
         
     @api.doc('delete a task')
-    def delete(self, id_):
+    @api.expect(parser_header)
+    @token_required
+    def delete(self, id_, current_user, **kwargs):
+        if current_user is None:
+            return self.send(status=400, message=kwargs["error_msg"])
         '''Fetch a session given its identifier'''
         result = delete_tasks([id_])
         return self.send(status=200)
