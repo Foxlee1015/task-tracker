@@ -27,7 +27,7 @@ def _create_task(user_id, title, text, repeat_type, link_ids, start_date, end_da
         
         task_group_id_with_link_list = []
         for link_id in link_ids:
-            if link_id != ""
+            if link_id != "":
                 task_group_id_with_link_list.append((task_group_id, link_id))
         if task_group_id_with_link_list:
             db.insert_task_group_link(task_group_id_with_link_list)
