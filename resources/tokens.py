@@ -13,7 +13,7 @@ api = Namespace('tokens', description='Sessions related operations')
 
 JWT_EXPIRATION_HOURS = 8
 
-def create_jwt(username):
+def create_jwt(user_id, username):
     """
     NOTE:
         https://pyjwt.readthedocs.io/en/latest/index.html
@@ -24,6 +24,7 @@ def create_jwt(username):
         "typ": "JWT"
     }
     token_payload = {
+        "uid": user_id,
         "iss": username,
         "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=JWT_EXPIRATION_HOURS),
         "iat": datetime.datetime.utcnow(),
@@ -69,8 +70,10 @@ class Token(CustomResource):
 
         if not db.get_user(name=username):
             return self.send(status=404)
-        if return_user_id_if_user_password_is_correct(username, password):
-            res = create_jwt(username)
+        
+        user_id = return_user_id_if_user_password_is_correct(username, password)
+        if user_id:
+            res = create_jwt(user_id, username)
             return self.send(status=201, result=res)
         return self.send(status=400)
 

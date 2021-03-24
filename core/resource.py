@@ -18,18 +18,6 @@ class CustomResource(Resource):
         response_body['result'] = kwargs.get('result')
         response_body['message'] = kwargs.get('message')
         
-        # { : None , 'message' : None}
-
-        # for arg in args:
-        #     if arg is not None:
-        #         for key in arg.keys():
-        #             if key == "status":
-        #                 status = arg["status"]
-        #             response_body[key] = arg[key]
-
-        # for param_key in kwargs.keys():
-        #     response_body[param_key] =  kwargs[param_key]
-        
         json_encode = json.JSONEncoder().encode
         return Response(json_encode(response_body), status=kwargs["status"], 
                         headers=headers, mimetype="application/json")

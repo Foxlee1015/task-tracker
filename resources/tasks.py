@@ -83,19 +83,27 @@ parser_create.add_argument('selected_date', type=str, location='form', help='its
 parser_create.add_argument('repeat_type', type=int, required=True, location='form', help='0 - no repeat, 1 - weekly, 2 - monthly, 3 - yearly, 4 - Biweekly')
 parser_create.add_argument('end_date', type=str, location='form', help='when repeating, set up end date. Default value is 6 months after selected date')
 parser_create.add_argument('link_ids', type=str, location='form', action='split')
+parser_create.add_argument('Authorization', type=str, required=True, location='headers')
 
 parser_delete = reqparse.RequestParser()
 parser_delete.add_argument('ids', type=str, required=True, action='split')
 parser_delete.add_argument('Authorization', type=str, required=True, location='headers')
 
 
+parser_get = reqparse.RequestParser()
+parser_get.add_argument('Authorization', type=str, required=True, location='headers')
+
 
 @api.route('/groups')
 class TaskGoup(CustomResource):
     @api.doc('get all tasks')
-    def get(self):
-        task_groups = db.get_task_groups()
-        
+    @api.expect(parser_get)
+    @token_required
+    def get(self, current_user, **kwargs):
+        if current_user is None:
+            return self.send(status=400, message=kwargs["error_msg"])
+
+        task_groups = db.get_task_groups(user_id=current_user["uid"])
         # sort by task datetime
         for task_group in task_groups:
             task_group = json_serializer_all_datetime_keys(task_group)
@@ -104,7 +112,10 @@ class TaskGoup(CustomResource):
     
     @api.doc('create a new task')
     @api.expect(parser_create)
-    def post(self):
+    @token_required
+    def post(self, current_user, **kwargs):
+        if current_user is None:
+            return self.send(status=400, message=kwargs["error_msg"])
         args = parser_create.parse_args()
         title = args["title"]
         text = args["text"]        

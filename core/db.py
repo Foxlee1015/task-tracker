@@ -235,7 +235,7 @@ def insert_task(group_id, datetimes):
         return False
 
 
-def get_task_groups(id_=None):
+def get_task_groups(id_=None, user_id=None):
     try:
         with get_db() as conn:
 
@@ -246,16 +246,20 @@ def get_task_groups(id_=None):
                 FROM
                     task_group as tg
             """
-            if id_ is None:
+            if id_ is None and user_id is None:
                 cur.execute(sql)
                 conn.commit()
                 res = cur.fetchall()
                 
             else:
-                sql = add_condition_to_query(sql, "id", id_)
+                if id_ is not None:
+                    sql = add_condition_to_query(sql, "id", id_)
+                elif user_id is not None:
+                    sql = add_condition_to_query(sql, "user_id", user_id)
                 cur.execute(sql)
                 conn.commit()
                 res = cur.fetchone()
+            
 
         return res
     except:
