@@ -246,20 +246,17 @@ def get_task_groups(id_=None, user_id=None):
                 FROM
                     task_group as tg
             """
-            if id_ is None and user_id is None:
-                cur.execute(sql)
-                conn.commit()
-                res = cur.fetchall()
-                
-            else:
-                if id_ is not None:
-                    sql = add_condition_to_query(sql, "id", id_)
-                elif user_id is not None:
-                    sql = add_condition_to_query(sql, "user_id", user_id)
+            if id_ is not None:
+                sql = add_condition_to_query(sql, "id", id_)
                 cur.execute(sql)
                 conn.commit()
                 res = cur.fetchone()
-            
+            else:
+                if user_id is not None:
+                    sql = add_condition_to_query(sql, "user_id", user_id)
+                cur.execute(sql)
+                conn.commit()
+                res = cur.fetchall()
 
         return res
     except:
