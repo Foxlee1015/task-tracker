@@ -43,7 +43,7 @@ def get_db():
         try:
             conn = pymysql.connect(**db_info_kwargs)
         except:
-            print("db host dev connect exception")
+            # print("db host dev connect exception")
             db_info_kwargs["host"] = db_host
             conn = pymysql.connect(**db_info_kwargs)
         yield conn
@@ -373,7 +373,7 @@ def insert_link(user_id, url,description, image_url):
         return False
 
 
-def get_links(id_=None):
+def get_links(id_=None, user_id=None):
     try:
         with get_db() as conn:
 
@@ -384,6 +384,8 @@ def get_links(id_=None):
                 FROM link
             """
             if id_ is None:
+                if user_id is not None:
+                    sql = add_condition_to_query(sql, "user_id", user_id)
                 cur.execute(sql)
                 conn.commit()
                 res = cur.fetchall()

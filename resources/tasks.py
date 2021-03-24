@@ -42,7 +42,6 @@ def create_task_dates_by_repeat_type(repeat_type, start_date, end_date):
      
     :param repeat_type: 0 - no repeat, 1 - weekly, 2 - monthly, 3 - yearly, 4 - Biweekly
     """
-    print(start_date, end_date)
     if start_date is None:
         start_date = datetime.datetime.now()
     else:
@@ -84,12 +83,9 @@ parser_create.add_argument('selected_date', type=str, location='form', help='its
 parser_create.add_argument('repeat_type', type=int, required=True, location='form', help='0 - no repeat, 1 - weekly, 2 - monthly, 3 - yearly, 4 - Biweekly')
 parser_create.add_argument('end_date', type=str, location='form', help='when repeating, set up end date. Default value is 6 months after selected date')
 parser_create.add_argument('link_ids', type=str, location='form', action='split')
-parser_create.add_argument('Authorization', type=str, required=True, location='headers')
 
 parser_delete = reqparse.RequestParser()
 parser_delete.add_argument('ids', type=str, required=True, action='split')
-parser_delete.add_argument('Authorization', type=str, required=True, location='headers')
-
 
 parser_header = reqparse.RequestParser()
 parser_header.add_argument('Authorization', type=str, required=True, location='headers')
@@ -112,8 +108,7 @@ class TaskGoup(CustomResource):
         return self.send(status=200, result=task_groups)
     
     @api.doc('create a new task')
-    @api.expect(parser_create)
-    @api.expect(parser_header)
+    @api.expect(parser_create, parser_header)
     @token_required
     def post(self, current_user, **kwargs):
         if current_user is None:
@@ -132,7 +127,7 @@ class TaskGoup(CustomResource):
         return self.send(status=status)
 
     @api.doc('delete task group')
-    @api.expect(parser_delete)
+    @api.expect(parser_delete, parser_header)
     @token_required
     def delete(self, current_user, **kwargs):
         if current_user is None:
@@ -151,12 +146,12 @@ class TaskGoup(CustomResource):
 @api.response(404, 'Task not found')
 class Task(CustomResource):
     @api.doc('get_tasks')
-    @api.expect(parser_header)
+    @api.expect(parser_header, parser_header)
     @token_required
     def get(self, id_, current_user, **kwargs):
+        '''Fetch a task group given its identifier'''
         if current_user is None:
             return self.send(status=400, message=kwargs["error_msg"])
-        '''Fetch a task group given its identifier'''
         task_group = db.get_task_groups(id_=id_)
         if task_group:
             task_group = json_serializer_all_datetime_keys(task_group)

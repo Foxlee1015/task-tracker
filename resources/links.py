@@ -5,6 +5,7 @@ from flask_restplus import Namespace, Resource, fields, reqparse
 
 from core import db
 from core.resource import CustomResource, response, json_serializer
+from core.utils import token_required
 
 api = Namespace('links', description='Links related operations')
 
@@ -36,29 +37,41 @@ parser_create.add_argument('image_url', type=str, location='form')
 parser_delete = reqparse.RequestParser()
 parser_delete.add_argument('ids', type=str, required=True, action='split')
 
+parser_header = reqparse.RequestParser()
+parser_header.add_argument('Authorization', type=str, required=True, location='headers')
 
 @api.route('/')
 class Links(CustomResource):
     @api.doc('get all links')
-    def get(self):
-        links = db.get_links()
+    @api.expect(parser_header)
+    @token_required
+    def get(self, current_user, **kwargs):
+        if current_user is None:
+            return self.send(status=400, message=kwargs["error_msg"])
+        links = db.get_links(user_id=current_user["uid"])
         return self.send(status=200, result=links)
     
     @api.doc('create a new link')
-    @api.expect(parser_create)
-    def post(self):
+    @api.expect(parser_create, parser_header)
+    @token_required
+    def post(self, current_user, **kwargs):
+        if current_user is None:
+            return self.send(status=400, message=kwargs["error_msg"])
         args = parser_create.parse_args()
         url = args["url"]
         description = args["description"]        
         image_url = args.get("image_url")
         
-        result = create_link(2, url, description, image_url)
+        result = create_link(current_user["uid"], url, description, image_url)
         status = 201 if result else 400
         return self.send(status=status)
 
     @api.doc('delete links')
-    @api.expect(parser_delete)
-    def delete(self):
+    @api.expect(parser_delete, parser_header)
+    @token_required
+    def delete(self, current_user, **kwargs):
+        if current_user is None:
+            return self.send(status=400, message=kwargs["error_msg"])
         args = parser_delete.parse_args()
         delete_links(args["ids"])
         return self.send(status=200)
@@ -67,10 +80,14 @@ class Links(CustomResource):
 @api.route('/<id_>')
 @api.param('id_', 'The link identifier')
 @api.response(404, 'Link not found')
-class Task(CustomResource):
+class Link(CustomResource):
     @api.doc('get_link')
-    def get(self, id_):
+    @api.expect(parser_create, parser_header)
+    @token_required
+    def get(self, id_, current_user, **kwargs):
         '''Fetch an link given its identifier'''
+        if current_user is None:
+            return self.send(status=400, message=kwargs["error_msg"])
         try:
             link = db.get_links(id_=id_)
             if link is None:
@@ -82,8 +99,12 @@ class Task(CustomResource):
 
 
     @api.doc('delete a link')
-    def delete(self, id_):
+    @api.expect(parser_header)
+    @token_required
+    def delete(self, id_, current_user, **kwargs):
         '''delete a link given its identifier'''
+        if current_user is None:
+            return self.send(status=400, message=kwargs["error_msg"])
         try:
             delete_links([id_])
             return self.send(status=200)
