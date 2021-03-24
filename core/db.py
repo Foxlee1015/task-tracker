@@ -298,14 +298,14 @@ def delete_task_groups(ids):
         traceback.print_exc()
 
 
-def get_tasks(id_=None):
+def get_tasks(id_=None, user_id=None):
     try:
         with get_db() as conn:
 
             cur = conn.cursor()
             sql = """
                 SELECT
-                    t.*, tg.title, tg.text
+                    t.*, tg.title, tg.text, tg.user_id
                 FROM
                     task as t
                 JOIN 
@@ -313,16 +313,19 @@ def get_tasks(id_=None):
                 ON 
                     t.group_id = tg.id
             """
-            if id_ is None:
-                cur.execute(sql)
-                conn.commit()
-                res = cur.fetchall()
-                
-            else:
-                sql = add_condition_to_query(sql, "id", id_)
+            print(user_id)
+            if id_ is not None:
+                sql = add_condition_to_query(sql, "t.id", id_)
                 cur.execute(sql)
                 conn.commit()
                 res = cur.fetchone()
+                
+            else:
+                if user_id is not None:
+                    sql = add_condition_to_query(sql, "tg.user_id", user_id)
+                cur.execute(sql)
+                conn.commit()
+                res = cur.fetchall()
 
         return res
     except:
@@ -434,3 +437,13 @@ def add_condition_to_query(sql, col, row):
     elif isinstance(row, str):
         sql += f" WHERE {col}='{row}'"
     return sql
+
+def add_multiple_conditions_to_query(sql, cols_rows):
+    sql += " WHERE"
+    for col_row in cols_rows:
+        col = col_row["col"]
+        row = col_row["row"]
+        if isinstance(col_row["col"], int):
+            sql += f" {col}={row}"
+        else:
+            sql += f" {col}='{row}'"

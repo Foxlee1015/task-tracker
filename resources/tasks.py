@@ -183,7 +183,7 @@ class Tasks(CustomResource):
     def get(self, current_user, **kwargs):
         if current_user is None:
             return self.send(status=400, message=kwargs["error_msg"])
-        tasks = db.get_tasks()
+        tasks = db.get_tasks(user_id=current_user["uid"])
         
         # sort by task datetime
         for task in tasks:
@@ -222,7 +222,7 @@ class Task(CustomResource):
         if current_user is None:
             return self.send(status=400, message=kwargs["error_msg"])
         '''Fetch an task given its identifier'''
-        task = db.get_tasks(id_=id_)
+        task = db.get_tasks(id_=id_, user_id=current_user["uid"])
         if task is None:
             return self.send(status=404, result=None) 
         task = json_serializer_all_datetime_keys(task)
