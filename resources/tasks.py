@@ -211,6 +211,10 @@ class Tasks(CustomResource):
             return self.send(status=400, message="Check user ids")
 
 
+parser_update_task = reqparse.RequestParser()
+parser_update_task.add_argument('checked', type=int, location='args', help='check when tasks are finished')
+parser_update_task.add_argument('task_datetime', type=str, location='args', help='check when tasks are finished')
+
 
 @api.route('/<int:id_>')
 @api.param('id_', 'The task identifier')
@@ -228,6 +232,26 @@ class Task(CustomResource):
             return self.send(status=404, result=None) 
         task = json_serializer_all_datetime_keys(task)
         return self.send(status=200, result=task)
+    
+    @api.doc('update a task')
+    @api.expect(parser_header, parser_update_task)
+    @token_required
+    def post(self, id_, current_user, **kwargs):
+        try:
+            if current_user is None:
+                return self.send(status=400, message=kwargs["error_msg"])
+            args = parser_update_task.parse_args()
+            checked = args.get("checked")
+            task_datetime = args.get("task_datetime")
+            if db.verify_task_owner(current_user["uid"], id_):
+                task = db.update_task(id_, checked=checked, datetime_=task_datetime)
+                if task:
+                    return self.send(status=200) 
+            else:
+                return self.send(status=403)
+        except:
+            traceback.print_exc()
+            return self.send(status=400)
         
         
     @api.doc('delete a task')

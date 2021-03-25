@@ -234,6 +234,31 @@ def insert_task(group_id, datetimes):
         traceback.print_exc()
         return False
 
+def verify_task_owner(user_id, task_id):
+    return get_tasks(id_=task_id, user_id=user_id)
+    
+
+def update_task(task_id, checked=None, datetime_=None):
+    if checked is None and datetime_ is None:
+        return None
+    try:
+        with get_db() as conn:
+            cur = conn.cursor()
+            sql = "UPDATE task SET "
+            if checked is not None:
+                sql += f"checked={checked}, "
+            if datetime_ is not None:
+                datetime_ = datetime.datetime.strptime(datetime_, '%Y-%m-%dT%H:%M')
+                sql += f"datetime='{datetime_}', "
+            sql = sql[:-2] # remove ', ' at the end
+            sql += f" WHERE id={task_id}"
+            
+            cur.execute(sql)
+            conn.commit()
+        return True
+    except:
+        traceback.print_exc()
+        return False
 
 def get_task_groups(id_=None, user_id=None):
     try:
@@ -313,9 +338,11 @@ def get_tasks(id_=None, user_id=None):
                 ON 
                     t.group_id = tg.id
             """
-            print(user_id)
             if id_ is not None:
                 sql = add_condition_to_query(sql, "t.id", id_)
+                
+                if user_id is not None:
+                    sql = add_condition_to_query(sql, "tg.user_id", user_id, is_first_condition=False)
                 cur.execute(sql)
                 conn.commit()
                 res = cur.fetchone()
@@ -431,11 +458,15 @@ def insert_task_group_link(task_group_id_with_link_list):
         return False
 
 
-def add_condition_to_query(sql, col, row):
+def add_condition_to_query(sql, col, row, is_first_condition=True):
+    if is_first_condition:
+        sql += " WHERE "
+    else:
+        sql += " AND "
     if isinstance(row, int):
-        sql += f" WHERE {col}={row}"
+        sql += f" {col}={row}"
     elif isinstance(row, str):
-        sql += f" WHERE {col}='{row}'"
+        sql += f" {col}='{row}'"
     return sql
 
 def add_multiple_conditions_to_query(sql, cols_rows):
