@@ -6,6 +6,7 @@ from flask_restplus import Namespace, Resource, fields, reqparse
 
 from core import db
 from core.resource import CustomResource, response
+from core.utils import token_required
 from .users import return_user_id_if_user_password_is_correct
 
 api = Namespace('tokens', description='Sessions related operations')
@@ -35,10 +36,6 @@ def create_jwt(user_id, username):
                             algorithm=token_header["alg"], headers=token_header)
     return encoded_jwt
 
-def refresh_jwt(user_id):
-    # get from db
-    token = 'b'
-    return x
 
 def get_user_info_if_token_is_valid(token):
     try:
@@ -57,13 +54,18 @@ def get_user_info_if_token_is_valid(token):
 parser_create = reqparse.RequestParser()
 parser_create.add_argument('username', type=str, required=True, action='form')
 parser_create.add_argument('password', type=str, required=True, location='form')
+parser_create.add_argument('Authorization', type=str, required=True, location='headers')
 
 
 @api.route('/')
 class Token(CustomResource):
     @api.doc('create jwt')
     @api.expect(parser_create)
-    def post(self):
+    @token_required
+    def post(self, current_user, **kwargs):
+        if current_user is not None:
+            res = create_jwt(current_user["uid"], current_user["iss"])
+            return self.send(status=201, result=res)
         args = parser_create.parse_args()
         username = args.get("username")
         password = args.get("password")

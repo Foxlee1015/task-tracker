@@ -1,4 +1,5 @@
 import json
+from datetime import date, datetime
 
 from flask import Response
 from flask_restplus import Resource
@@ -31,8 +32,6 @@ def response(**kwargs):
 
     return kwargs
 
-
-from datetime import date, datetime
 
 def json_serializer(obj, ignore_type_error=False):
     """JSON serializer for objects not serializable by default json code"""
