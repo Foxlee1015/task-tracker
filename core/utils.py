@@ -67,7 +67,6 @@ def docker_command(container_name, cmd):
         execute_command_ssh(f'docker exec -i {container_name} /bin/sh -c "{cmd}"')
     except Exception as e:
         traceback.print_exc()
-        print(e)
 
 def stringify_given_datetime_or_current_datetime(datetime_=None, format_='%Y-%m-%d %H:%M:%S'):
     '''
@@ -80,6 +79,16 @@ def stringify_given_datetime_or_current_datetime(datetime_=None, format_='%Y-%m-
     except Exception as e:
         traceback.print_exc()
         print(e)
+
+def parse_given_str_datetime_or_current_datetime(datetime_=None, format_='%Y-%m-%d %H:%M'):
+    try:
+        try:
+            datetime_ = datetime.datetime.strptime(datetime_, format_)
+        except:
+            datetime_ = datetime.datetime.strptime(datetime_, "%Y-%m-%dT%H:%M:%S")
+        return datetime_
+    except Exception as e:
+        traceback.print_exc()
 
 def check_if_only_int_numbers_exist(numbers):
     for number in numbers:

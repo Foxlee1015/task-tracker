@@ -9,7 +9,7 @@ import pymysql
 from dotenv import load_dotenv
 
 from core import errors
-from core.utils import docker_command, stringify_given_datetime_or_current_datetime, generate_hashed_password
+from core.utils import docker_command, stringify_given_datetime_or_current_datetime, generate_hashed_password, parse_given_str_datetime_or_current_datetime
 
 
 # load dotenv in the base root
@@ -248,7 +248,7 @@ def update_task(task_id, checked=None, datetime_=None):
             if checked is not None:
                 sql += f"checked={checked}, "
             if datetime_ is not None:
-                datetime_ = datetime.datetime.strptime(datetime_, '%Y-%m-%dT%H:%M')
+                datetime_ = parse_given_str_datetime_or_current_datetime(datetime_=datetime_)
                 sql += f"datetime='{datetime_}', "
             sql = sql[:-2] # remove ', ' at the end
             sql += f" WHERE id={task_id}"
