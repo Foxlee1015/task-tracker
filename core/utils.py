@@ -80,7 +80,7 @@ def stringify_given_datetime_or_current_datetime(datetime_=None, format_='%Y-%m-
         traceback.print_exc()
         print(e)
 
-def parse_given_str_datetime_or_current_datetime(datetime_=None, format_='%Y-%m-%d %H:%M'):
+def parse_given_str_datetime_or_current_datetime(datetime_=None, format_='%Y-%m-%dT%H:%M'):
     try:
         try:
             datetime_ = datetime.strptime(datetime_, format_)
