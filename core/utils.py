@@ -83,9 +83,9 @@ def stringify_given_datetime_or_current_datetime(datetime_=None, format_='%Y-%m-
 def parse_given_str_datetime_or_current_datetime(datetime_=None, format_='%Y-%m-%d %H:%M'):
     try:
         try:
-            datetime_ = datetime.datetime.strptime(datetime_, format_)
+            datetime_ = datetime.strptime(datetime_, format_)
         except:
-            datetime_ = datetime.datetime.strptime(datetime_, "%Y-%m-%dT%H:%M:%S")
+            datetime_ = datetime.strptime(datetime_, "%Y-%m-%dT%H:%M:%S")
         return datetime_
     except Exception as e:
         traceback.print_exc()
