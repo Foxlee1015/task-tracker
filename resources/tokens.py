@@ -52,9 +52,9 @@ def get_user_info_if_token_is_valid(token):
 
     
 parser_create = reqparse.RequestParser()
-parser_create.add_argument('username', type=str, required=True, action='form')
-parser_create.add_argument('password', type=str, required=True, location='form')
-parser_create.add_argument('Authorization', type=str, required=True, location='headers')
+parser_create.add_argument('username', type=str, action='form')
+parser_create.add_argument('password', type=str, location='form')
+parser_create.add_argument('Authorization', type=str, location='headers')
 
 
 @api.route('/')

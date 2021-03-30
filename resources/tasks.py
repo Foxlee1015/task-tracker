@@ -40,7 +40,7 @@ def _create_task(user_id, title, text, repeat_type, link_ids, start_date, end_da
 def create_task_dates_by_repeat_type(repeat_type, start_date, end_date):
     """
      
-    :param repeat_type: 0 - no repeat, 1 - weekly, 2 - monthly, 3 - yearly, 4 - Biweekly
+    :param repeat_type: 0 - No repeat, 1 - Weekly, 2 - Monthly, 3 - Yearly, 4 - Biweekly, 5 - Everyday
     """
     if start_date is None:
         start_date = datetime.datetime.now()
@@ -69,6 +69,8 @@ def create_task_dates_by_repeat_type(repeat_type, start_date, end_date):
             task_date = task_date + datetime.timedelta(days=365)
         elif repeat_type == 4:
             task_date = task_date + datetime.timedelta(days=14)
+        elif repeat_type == 5:
+            task_date = task_date + datetime.timedelta(days=1)
 
         task_dates.append(task_date)
     return task_dates
@@ -101,7 +103,10 @@ class TaskGoup(CustomResource):
             return self.send(status=400, message=kwargs["error_msg"])
 
         task_groups = db.get_task_groups(user_id=current_user["uid"])
-        # sort by task datetime
+        if not task_groups:
+            return self.send(status=203, result=None)
+
+        task_groups = sorted(task_groups, key=lambda x: x['datetime'])
         for task_group in task_groups:
             task_group = json_serializer_all_datetime_keys(task_group)
         
@@ -177,18 +182,22 @@ class Tasks(CustomResource):
     @api.expect(parser_header)
     @token_required
     def get(self, current_user, **kwargs):
-        if current_user is None:
-            return self.send(status=400, message=kwargs["error_msg"])
-        tasks = db.get_tasks(user_id=current_user["uid"])
-        
-        # sort by task datetime
-        for task in tasks:
-            task['datetime'] = json_serializer(task['datetime'])
-        
-        if tasks:
+        try:
+            if current_user is None:
+                return self.send(status=400, message=kwargs["error_msg"])
+            tasks = db.get_tasks(user_id=current_user["uid"])
+            if not tasks:
+                return self.send(status=203, result=None)
+
+            tasks = sorted(tasks, key=lambda x: x['datetime']) #, reverse=True)
+            for task in tasks:
+                task['datetime'] = json_serializer(task['datetime'])
+            
             return self.send(status=200, result=tasks)
-        else:
-            return self.send(status=203, result=None)
+        except:
+            traceback.print_exc()
+            return self.send(status=500, result=None)
+        
 
     @api.doc('delete tasks')
     @api.expect(parser_delete)
@@ -255,6 +264,5 @@ class Task(CustomResource):
     def delete(self, id_, current_user, **kwargs):
         if current_user is None:
             return self.send(status=400, message=kwargs["error_msg"])
-        '''Fetch a session given its identifier'''
         result = delete_tasks([id_])
         return self.send(status=200)
