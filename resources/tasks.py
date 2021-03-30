@@ -106,7 +106,7 @@ class TaskGoup(CustomResource):
         if not task_groups:
             return self.send(status=203, result=None)
 
-        task_groups = sorted(task_groups, key=lambda x: x['datetime'])
+        task_groups = sorted(task_groups, key=lambda x: x['update_datetime'])
         for task_group in task_groups:
             task_group = json_serializer_all_datetime_keys(task_group)
         
